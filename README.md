@@ -52,35 +52,53 @@ for _,service:=range services{
 ```
 
 
+#### **Where :**
+
 
 ```
 services,err:=Service().Where("name","=","sms").Get()
 ```
 `sql output: select * from services where services.name = ?
 `
+<hr>
+
+#### **Select specific columns :**
+
+
 ```
 services,err:=Service().Select("name","price").Where("name","=","pos").Get()
 ```
 `sql output: select name,price from services where services.name = ?
 `
+<hr>
+
+#### **Order By :**
+
+
 ```
 services,err:=Service().OrderBy("id","desc").Get()
 ```
 `sql output: select * from services order by id desc
 `
+<hr>
 
+#### **Group By :**
 ```
 services,err:=Service().Select("name","count(price) as price").GroupBy("name").OrderBy("price","desc").Get()
 ```
 `sql output: select name,count(price) as price from services group by name order by price desc
 `
+<hr>
 
+#### **Limit :**
 ```
 services,err:=Service().OrderBy("id","desc").Limit(1).Get()
 ```
 `sql output: select * from services order by id desc limit ?
 `
+<hr>
 
+#### **First :**
 ```
 service,err:=Service().First()
 ```
@@ -92,25 +110,37 @@ service,err:=Service().Where("name","=","crm").First()
 ```
 `sql output: select * from services where services.name = ? order by id asc limit ?
 `
+<hr>
+
+#### **Find :**
 
 ```
 service,err:=Service().Find(1)
 ```
 `sql output: select * from services where id = ? limit ?
 `
+<hr>
 
+#### **Exists :**
 
 ```
 service,err:=Service().Where("name","=","pos").Exists()
 ```
 `sql output: select exists(select * from services where services.name = ?) as result
 `
+<hr>
+
+#### **OrWhere :**
 
 ```
 services,err:=Service().Where("name","=","crm").OrWhere("id","=","1").Get()
 ```
 `sql output: select * from services where services.name = ? or services.id = ?
 `
+
+<hr>
+
+#### **Combination Where :**
 
 ```
 services,err:=Service().Where("name","=","crm").WhereCombination(func(m *gql.Model) {
@@ -119,6 +149,9 @@ services,err:=Service().Where("name","=","crm").WhereCombination(func(m *gql.Mod
 ```
 `sql output: select * from services where services.name = ? and (services.price = ? or services.price = ?)
 `
+<hr>
+
+#### **Where Exists :**
 ```
 services,err:=Service().Where("name","=","crm").WhereExists(func() *gql.Model {
 		return models.Client().Where("id","=","1")
@@ -126,6 +159,7 @@ services,err:=Service().Where("name","=","crm").WhereExists(func() *gql.Model {
 ```
 `sql output: select * from services where services.name = ? and  exists (select * from clients where clients.id = ?)
 `
+<hr>
 
 ### Insertion:
 
@@ -140,6 +174,9 @@ service := ServiceScanner{
 insertId,err:=Service().Insert(&service)
 ```
 `sql output: INSERT INTO services (name,price) VALUES (?,?)`
+<hr>
+
+#### **Insert and return object:**
 
 ```
 service := ServiceScanner{
@@ -155,6 +192,8 @@ sql output:
  2 - select * from services where id = ? limit ?
 ```
 
+<hr>
+
 ### Update:
 
 ```
@@ -169,6 +208,10 @@ affectedRows,err:=Service().Where("id","=","1").Update(&service)
 ```
 `sql output: UPDATE services set name = ?,price = ? where services.id = ?`
 
+<hr>
+
+#### **Update and return object:**
+
 ```
 service := ServiceScanner{
 		Name:  "test update and return updated object",
@@ -182,6 +225,7 @@ sql output:
     1- UPDATE services set name = ?,price = ? where services.id = ?
     2- select * from services where services.id = ?
 ```
+<hr>
 
 ### UNION
 ```
@@ -190,6 +234,7 @@ services,_:=models.Service().Union(func() *gql.Model {
 }).Get()
 ```
 `sql output: select * from services UNION (select * from services where services.id = ?)`
+<hr>
 
 ### Custom  Scanner
 You can create new scanner and use it in your query
@@ -204,11 +249,13 @@ services,_:=Service().With("clients").UseScanner(func() interface{} {
 		return &Scanner{}
 		}).Get()
 ```
+<hr>
 
 ### Query Context
 ```
  services,_:=models.Service().Context(&ctx).Get()
 ```
+<hr>
 
 ### Relationships
 GQL is using join queries with relationships, so it's solve n+1 problem
@@ -230,6 +277,8 @@ func Service() *gql.Model {
 	return &model
 }
 ```
+<hr>
+
 #### Define Many To Many
 
 ```
@@ -248,6 +297,8 @@ func Service() *gql.Model {
 	return &model
 }
 ```
+<hr>
+
 #### Select With Relationship
 
 ```
@@ -258,6 +309,7 @@ services,_:=Service().Select("services.id","clients.name").Where("id","=","1").W
 ##### Note :
     we selected id and name this columns values will be scaned at service scanner and this scanner already has name,id fields,
     so if we select * we must create new struct has fields that represent all output columns , this fields ordered by columns and finaly use this new struct as custom scanner.
+<hr>
 
 ### Transactions
 With GQL you can work with transactions easily and smoothly
@@ -280,20 +332,13 @@ With GQL you can work with transactions easily and smoothly
 	}
 
 ```
+<hr>
 
 ### Sql database
 You can use a database handler to execute your queries without GQL
 ```
 rows,err:=gql.GetSqlConnection().Query("select * from services")
 ```
-
-
-
-
-
-
-
-
 
 
 

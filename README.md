@@ -7,7 +7,7 @@
 `go get -u github.com/es-code/gql
 `
 
-##Usage
+## Usage
 
 ### Create Model
 ```

@@ -153,6 +153,9 @@ func (m *Model) Find(primaryKeyValue int64) (DataItem,error){
 	})
 
 	items,err:=m.Get()
+	if err != nil{
+		return nil,err
+	}
 	return items[0],err
 }
 
@@ -165,6 +168,9 @@ func (m *Model) First() (DataItem,error){
 	m.Limit(1)
 	m.OrderBy(getPrimaryKey(m),"asc")
 	items,err:=m.Get()
+	if err != nil{
+		return nil,err
+	}
 	return items[0],err
 }
 
@@ -172,6 +178,9 @@ func (m *Model) Latest() (DataItem,error){
 	m.Limit(1)
 	m.OrderBy(getPrimaryKey(m),"desc")
 	items,err:=m.Get()
+	if err != nil{
+		return nil,err
+	}
 	return items[0],err
 }
 

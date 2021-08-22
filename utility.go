@@ -115,3 +115,17 @@ func removeFromStrings(s *[]string, r *string) *[]string {
 	}
 	return &slice
 }
+
+
+func removeUnFillable(m *Model, columns *[]string,values *[]interface{})  {
+	if len(m.Fillable) > 0{
+		for i:=0;i<len(*columns);i++ {
+			if inStringArray(m.Fillable,(*columns)[i]) == false{
+				*columns =  append((*columns)[:i], (*columns)[i+1:]...)
+				*values =  append((*values)[:i], (*values)[i+1:]...)
+			}
+		}
+	}
+}
+
+

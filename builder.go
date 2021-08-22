@@ -209,6 +209,7 @@ func queryWithOutTransaction(m *Model,query *string,params *[]interface{}) (*sql
 func buildUpdateStmt(m *Model,updatedObject interface{}) (*string,*[]interface{}) {
 	var updateStmt string
 	columns,values := structFieldsValues(updatedObject)
+	removeUnFillable(m,columns,values)
 	updateStmt+="UPDATE "+m.Table+" set "
 	for i:=0;i<len(*columns);i++ {
 		checkPrimaryKeyValue(m,i,columns,values)
@@ -224,7 +225,7 @@ func buildUpdateStmt(m *Model,updatedObject interface{}) (*string,*[]interface{}
 
 func buildInsertStmt(m *Model,insertObject interface{}) (*string,*[]interface{}) {
 	columns,values := structFieldsValues(insertObject)
-
+	removeUnFillable(m,columns,values)
 	var stmtQuery string
 	var perpareValues []string
 

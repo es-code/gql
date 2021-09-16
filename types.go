@@ -7,6 +7,7 @@ import (
 
 type Model struct {
 	Table string
+	Connection string
 	Fillable []string
 	Scanner func() interface{}
 	Relations map[string]Relation

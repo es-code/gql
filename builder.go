@@ -157,7 +157,7 @@ func execInTransaction(m *Model,stmt *string,params *[]interface{}) (sql.Result,
 
 func execWithOutTransaction(m *Model,stmt *string,params *[]interface{}) (sql.Result,error)  {
 	var result sql.Result
-	stmtOut, err := sqlDB.Prepare(*stmt)
+	stmtOut, err := m.getConnection().Prepare(*stmt)
 	if err != nil {
 		return result,err
 	}
@@ -187,7 +187,7 @@ func queryInTransaction(m *Model,query *string,params *[]interface{}) (*sql.Rows
 }
 
 func queryWithOutTransaction(m *Model,query *string,params *[]interface{}) (*sql.Rows,error) {
-	stmtOut, err := sqlDB.Prepare(*query)
+	stmtOut, err := m.getConnection().Prepare(*query)
 	var rows *sql.Rows
 	if err != nil {
 		return rows,err

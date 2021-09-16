@@ -8,11 +8,22 @@
 `
 
 ## Usage
-
+### Open Connection
+```
+func main(){
+    //gql.Connect func takes your connection name and connection driver and data source               
+        gqlCon:=gql.Connect("master","mysql", "root:pass@tcp(127.0.0.1:3306)/test_db?charset=utf8&parseTime=true")
+	defer gqlCon.Close()
+	
+	//open other connection
+	gqlCon:=gql.Connect("second","mysql", "root:pass@tcp(127.0.0.1:3306)/second_db?charset=utf8&parseTime=true")
+	defer gqlCon.Close()
+}	
+```
 ### Create Model
 ```
 func Service() *gql.Model {
-	return &gql.Model{Table: "services",Scanner: func() interface{} {
+	return &gql.Model{Table: "services",Connection:"master",Scanner: func() interface{} {
 		return &ServiceScanner{}
 	}}
 }
@@ -314,8 +325,8 @@ services,_:=Service().Select("services.id","clients.name").Where("id","=","1").W
 ### Transactions
 With GQL you can work with transactions easily and smoothly
 ```
-    //start transaction
-	err:= gql.Transaction(&ctx,&sql.TxOptions{}, func(tx *sql.Tx) error {
+    //start transaction on master connection
+	err:= gql.Transaction("master",&ctx,&sql.TxOptions{}, func(tx *sql.Tx) error {
 		
 		//select and lock and parse transaction to query we want run in a transaction
 		item,err:=models.Service().Where("id","=","1").Transaction(tx).LockForUpdate().First()
@@ -337,7 +348,7 @@ With GQL you can work with transactions easily and smoothly
 ### Sql database
 You can use a database handler to execute your queries without GQL
 ```
-rows,err:=gql.GetSqlConnection().Query("select * from services")
+rows,err:=gql.GetSqlConnection("master").Query("select * from services")
 ```
 
 

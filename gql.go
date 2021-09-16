@@ -7,9 +7,11 @@ import (
 	"strconv"
 )
 
-var sqlDB *sql.DB
+var sqlDBS = make(map[string]*sql.DB)
 
-func Connect(driver string,dataSource string) *sql.DB{
+const defaultConnection = "master"
+
+func Connect(connectionName string,driver string,dataSource string) *sql.DB{
 	db, err := sql.Open(driver, dataSource)
 	if err != nil {
 		panic(err.Error())
@@ -18,7 +20,12 @@ func Connect(driver string,dataSource string) *sql.DB{
 	if err != nil {
 		panic(err.Error())
 	}
-	sqlDB=db
+
+	if connectionName == ""{
+		connectionName = defaultConnection
+	}
+
+	sqlDBS[connectionName]=db
 	return db
 }
 
@@ -246,7 +253,7 @@ func (m *Model) Delete() (int64,error) {
 }
 
 func (m *Model) Truncate() error {
-	_,err:=sqlDB.Query("truncate table "+m.Table)
+	_,err:=m.getConnection().Query("truncate table "+m.Table)
 	return err
 }
 
@@ -257,8 +264,8 @@ func (m *Model) Transaction(Tx *sql.Tx) *Model {
 	return m
 }
 
-func Transaction(BeginContext *context.Context,TxOptions *sql.TxOptions,transaction func(tx *sql.Tx) error) error {
-	tx, err := sqlDB.BeginTx(*BeginContext, TxOptions)
+func Transaction(ConnectionName string, BeginContext *context.Context,TxOptions *sql.TxOptions,transaction func(tx *sql.Tx) error) error {
+	tx, err := GetSqlConnection(ConnectionName).BeginTx(*BeginContext, TxOptions)
 	if err != nil {
 		return err
 	}
@@ -286,8 +293,15 @@ func (m *Model) ToSql() string {
 	return *queryString
 }
 
-func GetSqlConnection()  *sql.DB{
-	return sqlDB
+func GetSqlConnection(ConnectionName string)  *sql.DB{
+	if ConnectionName == ""{
+		return sqlDBS[defaultConnection]
+	}
+	return sqlDBS[ConnectionName]
+}
+
+func (m *Model) getConnection() *sql.DB {
+	return GetSqlConnection(m.Connection)
 }
 
 

@@ -234,7 +234,7 @@ func (m *Model) UpdateAndReturn(updatedObject interface{}) ([]DataItem,error) {
 
 func (m *Model) Delete() (int64,error) {
 	if len(m.query.query) == 0{
-	return 0,errors.New("you want to delete with out any conditions , so will delete all data, if you want this please use Truncate func")
+		return 0,errors.New("you want to delete with out any conditions , so will delete all data, if you want this please use Truncate func")
 	}
 	var deleteStmt string
 	var params []interface{}
@@ -273,8 +273,8 @@ func Transaction(BeginContext *context.Context,TxOptions *sql.TxOptions,transact
 }
 
 func (m *Model) Context(Context *context.Context) *Model{
-		m.query.queryContext = Context
-		return m
+	m.query.queryContext = Context
+	return m
 }
 
 func (m *Model) LockForUpdate() *Model {

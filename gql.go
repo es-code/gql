@@ -162,7 +162,26 @@ func (m *Model) Find(primaryKeyValue int64) (DataItem,error){
 	if err != nil{
 		return nil,err
 	}
+	//check if not found result
+	if len(items) < 1{
+		err  = errors.New("no result found")
+		return nil,err
+	}
+	//return first item
+
 	return items[0],err
+}
+
+func (m *Model) Count(column string) (int64,error)  {
+	m.query.countColumn = column
+	m.UseScanner(func() interface{} {
+		return &CountScanner{}
+	})
+	data,err :=m.Get()
+	if err != nil{
+		return 0,err
+	}
+	return data[0].(*CountScanner).Count,err
 }
 
 func (m *Model) Limit(limit int)  *Model{
@@ -177,6 +196,11 @@ func (m *Model) First() (DataItem,error){
 	if err != nil{
 		return nil,err
 	}
+	//check if not found result
+	if len(items) < 1{
+		err  = errors.New("no result found")
+		return nil,err
+	}
 	return items[0],err
 }
 
@@ -185,6 +209,11 @@ func (m *Model) Latest() (DataItem,error){
 	m.OrderBy(getPrimaryKey(m),"desc")
 	items,err:=m.Get()
 	if err != nil{
+		return nil,err
+	}
+	//check if not found result
+	if len(items) < 1{
+		err  = errors.New("no result found")
 		return nil,err
 	}
 	return items[0],err

@@ -9,8 +9,13 @@ import (
 func buildQuery(m *Model) (*string,*[]interface{}){
 	var sqlQuery string
 	var params []interface{}
+	//check if count query
+	if m.query.countColumn != ""{
+		sqlQuery = buildCount(m)
+	}else{
+		sqlQuery = "select "+getSelected(m)+" from "+m.Table
+	}
 
-	sqlQuery += "select "+getSelected(m)+" from "+m.Table
 	if len(m.query.joins) > 0 {
 		buildJoins(m,&sqlQuery)
 	}
@@ -35,21 +40,25 @@ func buildQuery(m *Model) (*string,*[]interface{}){
 	if m.query.lock !=""{
 		sqlQuery+=m.query.lock
 	}
-	sqlQuery = buildExists(m,sqlQuery)
+	//check if exists query
+	if m.query.exists == true{
+		sqlQuery = buildExists(sqlQuery)
+	}
 
 	buildUnion(m,&sqlQuery,&params)
 
 	return &sqlQuery,&params
 }
 
-func buildExists(m *Model,sqlQuery string) string {
-
+func buildExists(sqlQuery string) string {
 	var queryWithExists string
-	if m.query.exists == true{
-		queryWithExists = "select exists("+sqlQuery+") as result"
-		return queryWithExists
-	}
-	return sqlQuery
+	queryWithExists = "select exists("+sqlQuery+") as result"
+
+	return queryWithExists
+}
+
+func buildCount(m *Model) string  {
+	return "select count("+m.query.countColumn+") as result_count from "+m.Table
 }
 
 func buildUnion(m *Model,sqlQuery *string,params *[]interface{})  {

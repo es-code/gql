@@ -37,6 +37,7 @@ type query struct {
 	queryContext *context.Context
 	lock string
 	exists bool
+	countColumn string
 	union []unionQuery
 }
 
@@ -71,4 +72,8 @@ type ExecResult struct {
 
 type BoolScanner struct {
 	Result bool `db:"result"`
+}
+
+type CountScanner struct {
+	Count int64 `db:"result_count"`
 }

@@ -286,9 +286,9 @@ func buildWhereQuery(m *Model, sqlQuery *string, params *[]interface{}) {
 			*params = append(*params, m.query.query[i].value)
 		} else if m.query.query[i].query == "in" {
 			var in []string
-			for j := 0; j < len(m.query.query[j].in); j++ {
+			for j := 0; j < len(m.query.query[i].in); j++ {
 				in = append(in, "?")
-				*params = append(*params, m.query.query[j].in)
+				*params = append(*params, m.query.query[i].in[j])
 			}
 			*sqlQuery += stmt + comp + m.query.query[i].column + " in (" + strings.Join(in, ",") + ")"
 

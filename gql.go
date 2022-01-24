@@ -11,7 +11,7 @@ var sqlDBS = make(map[string]*sql.DB)
 
 const defaultConnection = "master"
 
-func Connect(connectionName string,driver string,dataSource string) *sql.DB{
+func Connect(connectionName string, driver string, dataSource string) *sql.DB {
 	db, err := sql.Open(driver, dataSource)
 	if err != nil {
 		panic(err.Error())
@@ -21,95 +21,92 @@ func Connect(connectionName string,driver string,dataSource string) *sql.DB{
 		panic(err.Error())
 	}
 
-	if connectionName == ""{
+	if connectionName == "" {
 		connectionName = defaultConnection
 	}
 
-	sqlDBS[connectionName]=db
+	sqlDBS[connectionName] = db
 	return db
 }
 
-
-func (m *Model) Select(cols ...string) *Model{
-	for _,col := range cols {
-		if inStringArray(m.query.selected,col) == false{
-			m.query.selected = append(m.query.selected,col)
+func (m *Model) Select(cols ...string) *Model {
+	for _, col := range cols {
+		if inStringArray(m.query.selected, col) == false {
+			m.query.selected = append(m.query.selected, col)
 		}
 	}
 	return m
 }
-
 
 func (m *Model) UseScanner(scanner func() interface{}) *Model {
 	m.Scanner = scanner
 	return m
 }
 
-func (m *Model) Exists()  (bool,error){
+func (m *Model) Exists() (bool, error) {
 	m.query.exists = true
 	m.UseScanner(func() interface{} {
 		return &BoolScanner{}
 	})
-	data,err :=m.Get()
-	if err != nil{
-		return false,err
+	data, err := m.Get()
+	if err != nil {
+		return false, err
 	}
-	result:=data[0].(*BoolScanner)
-	return result.Result,err
+	result := data[0].(*BoolScanner)
+	return result.Result, err
 }
 
-func (m *Model) Where(column string ,op string,value string) *Model{
-	if m.query.whereCombination != true{
+func (m *Model) Where(column string, op string, value string) *Model {
+	if m.query.whereCombination != true {
 
-		if stringHasDot(column) == false{
-			column = m.Table+"."+column
+		if stringHasDot(column) == false {
+			column = m.Table + "." + column
 		}
 
 		m.query.query = append(m.query.query, whereQuery{
 			column: column,
 			op:     op,
 			value:  value,
-			query:"where",
+			query:  "where",
 		})
 	}
 
 	return m
 }
 
-
-func (m *Model) OrWhere(column string,op string,value string) *Model{
+func (m *Model) OrWhere(column string, op string, value string) *Model {
 	m.query.query = append(m.query.query, whereQuery{
 		column: column,
 		op:     op,
 		value:  value,
-		query:"or",
+		query:  "or",
 	})
 	return m
 }
 
 func (m *Model) WhereCombination(query func(m *Model)) *Model {
-	lastQueryIndex:=len(m.query.query)
+	lastQueryIndex := len(m.query.query)
 	query(m)
-	currentQueryIndex:=len(m.query.query) -1
+	currentQueryIndex := len(m.query.query) - 1
 	checkWhereCombinationMap(m)
-	m.query.combinationWhere[lastQueryIndex]=currentQueryIndex
+	m.query.combinationWhere[lastQueryIndex] = currentQueryIndex
 	return m
 }
 
 func (m *Model) WhereExists(query func() *Model) *Model {
-	model:=query()
-	queryString,params:=buildQuery(model)
+	model := query()
+	queryString, params := buildQuery(model)
 	m.query.query = append(m.query.query, whereQuery{
-		query:"exists",
+		query:        "exists",
 		existsParams: params,
-		existsQuery: queryString,
+		existsQuery:  queryString,
 	})
 	return m
 }
 
 func (m *Model) Union(query func() *Model) *Model {
-	model:=query()
-	queryString,params:=buildQuery(model)
+	model := query()
+	queryString, params := buildQuery(model)
 	m.query.union = append(m.query.union, unionQuery{
 		unionQuery:  queryString,
 		unionParams: params,
@@ -117,175 +114,173 @@ func (m *Model) Union(query func() *Model) *Model {
 	return m
 }
 
-
-func (m *Model) WhereIn(column string,value []string) *Model {
+func (m *Model) WhereIn(column string, value []string) *Model {
 	m.query.query = append(m.query.query, whereQuery{
 		column: column,
-		in:value,
-		query:"in",
+		in:     value,
+		query:  "in",
 	})
 	return m
 }
 
-func (m *Model) GroupBy(groupBy ...string)  *Model{
-	for _,col := range groupBy {
-		if inStringArray(m.query.groupBy,col) == false{
-			m.query.groupBy = append(m.query.groupBy,col)
+func (m *Model) GroupBy(groupBy ...string) *Model {
+	for _, col := range groupBy {
+		if inStringArray(m.query.groupBy, col) == false {
+			m.query.groupBy = append(m.query.groupBy, col)
 		}
 	}
 	return m
 }
 
-func (m *Model) OrderBy(column string,orderType string)  *Model{
-	m.query.order = column+" "+orderType
+func (m *Model) OrderBy(column string, orderType string) *Model {
+	m.query.order = column + " " + orderType
 	return m
 }
 
-func (m *Model) With(relationName string) *Model{
+func (m *Model) With(relationName string) *Model {
 	m.query.joins = append(m.query.joins, relationName)
 	return m
 }
 
-
-func (m *Model) Find(primaryKeyValue int64) (DataItem,error){
+func (m *Model) Find(primaryKeyValue int64) (DataItem, error) {
 	m.Limit(1)
 	m.query.query = []whereQuery{}
-	m.query.query = append(m.query.query,whereQuery{
+	m.query.query = append(m.query.query, whereQuery{
 		column: getPrimaryKey(m),
 		op:     "=",
 		value:  strconv.FormatInt(primaryKeyValue, 10),
-		query:"where",
-
+		query:  "where",
 	})
 
-	items,err:=m.Get()
-	if err != nil{
-		return nil,err
+	items, err := m.Get()
+	if err != nil {
+		return nil, err
 	}
 	//check if not found result
-	if len(items) < 1{
-		err  = errors.New("no result found")
-		return nil,err
+	if len(items) < 1 {
+		err = errors.New("no result found")
+		return nil, err
 	}
 	//return first item
 
-	return items[0],err
+	return items[0], err
 }
 
-func (m *Model) Count(column string) (int64,error)  {
+func (m *Model) Count(column string) (int64, error) {
 	m.query.countColumn = column
 	m.UseScanner(func() interface{} {
 		return &CountScanner{}
 	})
-	data,err :=m.Get()
-	if err != nil{
-		return 0,err
+	data, err := m.Get()
+	if err != nil {
+		return 0, err
 	}
-	return data[0].(*CountScanner).Count,err
+	return data[0].(*CountScanner).Count, err
 }
 
-func (m *Model) Limit(limit int)  *Model{
+func (m *Model) Limit(limit int) *Model {
 	m.query.limit = strconv.Itoa(limit)
 	return m
 }
 
-func (m *Model) First() (DataItem,error){
-	m.Limit(1)
-	m.OrderBy(getPrimaryKey(m),"asc")
-	items,err:=m.Get()
-	if err != nil{
-		return nil,err
-	}
-	//check if not found result
-	if len(items) < 1{
-		err  = errors.New("no result found")
-		return nil,err
-	}
-	return items[0],err
+func (m *Model) Offset(offset int) *Model {
+	m.query.offset = strconv.Itoa(offset)
+	return m
 }
 
-func (m *Model) Latest() (DataItem,error){
+func (m *Model) First() (DataItem, error) {
 	m.Limit(1)
-	m.OrderBy(getPrimaryKey(m),"desc")
-	items,err:=m.Get()
-	if err != nil{
-		return nil,err
+	m.OrderBy(getPrimaryKey(m), "asc")
+	items, err := m.Get()
+	if err != nil {
+		return nil, err
 	}
 	//check if not found result
-	if len(items) < 1{
-		err  = errors.New("no result found")
-		return nil,err
+	if len(items) < 1 {
+		err = errors.New("no result found")
+		return nil, err
 	}
-	return items[0],err
+	return items[0], err
 }
 
-func (m *Model) Get() ([]DataItem,error) {
+func (m *Model) Latest() (DataItem, error) {
+	m.Limit(1)
+	m.OrderBy(getPrimaryKey(m), "desc")
+	items, err := m.Get()
+	if err != nil {
+		return nil, err
+	}
+	//check if not found result
+	if len(items) < 1 {
+		err = errors.New("no result found")
+		return nil, err
+	}
+	return items[0], err
+}
+
+func (m *Model) Get() ([]DataItem, error) {
 	return sqlSelectQuery(m)
 }
 
-
-func (m *Model) HasRelation(relationName string,relatedTable string,foreignKey string,localKey string) *Model{
+func (m *Model) HasRelation(relationName string, relatedTable string, foreignKey string, localKey string) *Model {
 	checkRelationsMap(m)
-	m.Relations[relationName]=Relation{relationType: "hasRelation",relationTable: relatedTable,foreignKey: foreignKey,localKey: localKey}
+	m.Relations[relationName] = Relation{relationType: "hasRelation", relationTable: relatedTable, foreignKey: foreignKey, localKey: localKey}
 	return m
 }
 
-func (m *Model) BelongsToMany(relationName string,relatedTable string,foreignKey string,localKey string,relatedForeignKey string,relatedLocalKey string,middleTable string) *Model{
+func (m *Model) BelongsToMany(relationName string, relatedTable string, foreignKey string, localKey string, relatedForeignKey string, relatedLocalKey string, middleTable string) *Model {
 	checkRelationsMap(m)
-	m.Relations[relationName]=Relation{relationType: "belongsToMany",relationTable: relatedTable,foreignKey: foreignKey,localKey: localKey,relationModelForeignKey: relatedForeignKey,relationModelLocalKey: relatedLocalKey,middleTable: middleTable}
+	m.Relations[relationName] = Relation{relationType: "belongsToMany", relationTable: relatedTable, foreignKey: foreignKey, localKey: localKey, relationModelForeignKey: relatedForeignKey, relationModelLocalKey: relatedLocalKey, middleTable: middleTable}
 	return m
 }
 
-
-func (m *Model) Insert(insertObject interface{}) (int64,error){
-	insertStmt,params:=buildInsertStmt(m,insertObject)
-	result,err:=prepareAndExec(m,insertStmt,params,true)
-	return result.LastId,err
+func (m *Model) Insert(insertObject interface{}) (int64, error) {
+	insertStmt, params := buildInsertStmt(m, insertObject)
+	result, err := prepareAndExec(m, insertStmt, params, true)
+	return result.LastId, err
 }
 
-func (m *Model) InsertAndReturn(insertObject interface{}) (DataItem,error) {
-	id,err:= m.Insert(insertObject)
-	if err != nil{
-		return -1,err
+func (m *Model) InsertAndReturn(insertObject interface{}) (DataItem, error) {
+	id, err := m.Insert(insertObject)
+	if err != nil {
+		return -1, err
 	}
 	return m.Find(id)
 }
 
-
-func (m *Model) Update(updatedObject interface{}) (int64,error) {
-		updateStmt,params:=buildUpdateStmt(m,updatedObject)
-		result,err:=prepareAndExec(m,updateStmt,params,false)
-		return result.Affected,err
+func (m *Model) Update(updatedObject interface{}) (int64, error) {
+	updateStmt, params := buildUpdateStmt(m, updatedObject)
+	result, err := prepareAndExec(m, updateStmt, params, false)
+	return result.Affected, err
 }
 
-func (m *Model) UpdateAndReturn(updatedObject interface{}) ([]DataItem,error) {
-	updateStmt,params:=buildUpdateStmt(m,updatedObject)
-	_,err:=prepareAndExec(m,updateStmt,params,false)
-	if err != nil{
-		return nil,err
+func (m *Model) UpdateAndReturn(updatedObject interface{}) ([]DataItem, error) {
+	updateStmt, params := buildUpdateStmt(m, updatedObject)
+	_, err := prepareAndExec(m, updateStmt, params, false)
+	if err != nil {
+		return nil, err
 	}
 	return m.Get()
 }
 
-func (m *Model) Delete() (int64,error) {
-	if len(m.query.query) == 0{
-		return 0,errors.New("you want to delete with out any conditions , so will delete all data, if you want this please use Truncate func")
+func (m *Model) Delete() (int64, error) {
+	if len(m.query.query) == 0 {
+		return 0, errors.New("you want to delete with out any conditions , so will delete all data, if you want this please use Truncate func")
 	}
 	var deleteStmt string
 	var params []interface{}
-	deleteStmt+="DELETE FROM "+m.Table
-	buildWhereQuery(m,&deleteStmt,&params)
+	deleteStmt += "DELETE FROM " + m.Table
+	buildWhereQuery(m, &deleteStmt, &params)
 
-	result,err:=prepareAndExec(m,&deleteStmt,&params,false)
+	result, err := prepareAndExec(m, &deleteStmt, &params, false)
 
-	return result.Affected,err
+	return result.Affected, err
 }
 
 func (m *Model) Truncate() error {
-	_,err:=m.getConnection().Query("truncate table "+m.Table)
+	_, err := m.getConnection().Query("truncate table " + m.Table)
 	return err
 }
-
 
 func (m *Model) Transaction(Tx *sql.Tx) *Model {
 	m.query.transaction = true
@@ -293,13 +288,13 @@ func (m *Model) Transaction(Tx *sql.Tx) *Model {
 	return m
 }
 
-func Transaction(ConnectionName string, BeginContext *context.Context,TxOptions *sql.TxOptions,transaction func(tx *sql.Tx) error) error {
+func Transaction(ConnectionName string, BeginContext *context.Context, TxOptions *sql.TxOptions, transaction func(tx *sql.Tx) error) error {
 	tx, err := GetSqlConnection(ConnectionName).BeginTx(*BeginContext, TxOptions)
 	if err != nil {
 		return err
 	}
-	err=transaction(tx)
-	if err != nil{
+	err = transaction(tx)
+	if err != nil {
 		_ = tx.Rollback()
 		return err
 	}
@@ -307,7 +302,7 @@ func Transaction(ConnectionName string, BeginContext *context.Context,TxOptions 
 	return err
 }
 
-func (m *Model) Context(Context *context.Context) *Model{
+func (m *Model) Context(Context *context.Context) *Model {
 	m.query.queryContext = Context
 	return m
 }
@@ -318,12 +313,12 @@ func (m *Model) LockForUpdate() *Model {
 }
 
 func (m *Model) ToSql() string {
-	queryString,_:=buildQuery(m)
+	queryString, _ := buildQuery(m)
 	return *queryString
 }
 
-func GetSqlConnection(ConnectionName string)  *sql.DB{
-	if ConnectionName == ""{
+func GetSqlConnection(ConnectionName string) *sql.DB {
+	if ConnectionName == "" {
 		return sqlDBS[defaultConnection]
 	}
 	return sqlDBS[ConnectionName]
@@ -332,7 +327,3 @@ func GetSqlConnection(ConnectionName string)  *sql.DB{
 func (m *Model) getConnection() *sql.DB {
 	return GetSqlConnection(m.Connection)
 }
-
-
-
-

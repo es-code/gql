@@ -6,68 +6,66 @@ import (
 )
 
 type Model struct {
-	Table string
+	Table      string
 	Connection string
-	Fillable []string
-	Scanner func() interface{}
-	Relations map[string]Relation
+	Fillable   []string
+	Scanner    func() interface{}
+	Relations  map[string]Relation
 	PrimaryKey string
-	query query
+	query      query
 }
 
 type unionQuery struct {
-	unionQuery *string
+	unionQuery  *string
 	unionParams *[]interface{}
 }
 
-
 type query struct {
-	query []whereQuery
+	query            []whereQuery
 	combinationWhere map[int]int
 	whereCombination bool
-	params []interface{}
-	selected []string
-	append string
-	order string
-	groupBy []string
-	limit string
-	joins []string
-	transaction bool
-	sqlTransaction *sql.Tx
-	queryContext *context.Context
-	lock string
-	exists bool
-	countColumn string
-	union []unionQuery
+	params           []interface{}
+	selected         []string
+	append           string
+	order            string
+	groupBy          []string
+	limit            string
+	offset           string
+	joins            []string
+	transaction      bool
+	sqlTransaction   *sql.Tx
+	queryContext     *context.Context
+	lock             string
+	exists           bool
+	countColumn      string
+	union            []unionQuery
 }
 
 type whereQuery struct {
-	column string
-	op string
-	value string
-	in []string
-	query string
-	existsQuery *string
+	column       string
+	op           string
+	value        string
+	in           []string
+	query        string
+	existsQuery  *string
 	existsParams *[]interface{}
-
 }
 
-
 type Relation struct {
-	relationType string
-	relationTable string
-	foreignKey string
-	localKey string
-	middleTable string
+	relationType            string
+	relationTable           string
+	foreignKey              string
+	localKey                string
+	middleTable             string
 	relationModelForeignKey string
-	relationModelLocalKey string
+	relationModelLocalKey   string
 }
 
 type DataItem interface{}
 
 type ExecResult struct {
 	Affected int64
-	LastId int64
+	LastId   int64
 }
 
 type BoolScanner struct {
